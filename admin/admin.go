@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	"github.com/gofiber/fiber"
-	"github.com/gofiber/template/django"
 )
 
 /*Model :
@@ -49,7 +48,7 @@ func AddSection(name string, inputStructs ...interface{}) {
 /*SetupRoutes :
 function creates all the necessary routes for the admin site
 */
-func setupRoutes(app *fiber.App) {
+func SetupRoutes(app *fiber.App) {
 	app.Get("/admin/", func(c *fiber.Ctx) {
 		c.Render("admin/home", fiber.Map{
 			// "Sections": sectionMap,
@@ -58,16 +57,4 @@ func setupRoutes(app *fiber.App) {
 			"TEST":     "TEST",
 		}, "layouts/admin")
 	})
-}
-
-func StartAdmin(port int) {
-	engine := django.New("./views", ".dj")
-	app := fiber.New(&fiber.Settings{
-		Views: engine,
-	})
-	app.Static("/static/", "./static")
-
-	setupRoutes(app)
-
-	app.Listen(port)
 }
