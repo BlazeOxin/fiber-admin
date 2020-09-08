@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/gofiber/fiber"
@@ -43,12 +44,14 @@ func AddSection(name string, inputStructs ...interface{}) {
 		})
 	}
 	sections = append(sections, name)
+	ModelMap[name] = sectionStructs
 }
 
 /*SetupRoutes :
 function creates all the necessary routes for the admin site
 */
 func SetupRoutes(app *fiber.App) {
+	fmt.Print(sections, ModelMap)
 	app.Get("/admin/", func(c *fiber.Ctx) {
 		c.Render("admin/home", fiber.Map{
 			// "Sections": sectionMap,
