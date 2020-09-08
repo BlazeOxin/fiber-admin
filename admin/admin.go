@@ -4,14 +4,23 @@ import (
 	"reflect"
 
 	"github.com/gofiber/fiber"
+	"github.com/gofiber/template/django"
 )
 
-type model struct {
+/*Model :
+
+ */
+
+type Model struct {
 	name   string
 	object interface{}
 }
 
-var sectionMap = make(map[string][]model)
+var sections []string
+
+var ModelMap = make(map[string][]Model)
+
+// var sectionMap = make(map[string][]Model)
 
 func getStructName(structure interface{}) string {
 	valueOf := reflect.ValueOf(structure)
@@ -27,24 +36,38 @@ register your Database Structs into different sections
 effictively mimic Django Admin App based Object Grouping
 */
 func AddSection(name string, inputStructs ...interface{}) {
-	var sectionStructs []model
+	var sectionStructs []Model
 	for _, iterStruct := range inputStructs {
-		sectionStructs = append(sectionStructs, model{
+		sectionStructs = append(sectionStructs, Model{
 			name:   getStructName(iterStruct),
 			object: iterStruct,
 		})
 	}
-	sectionMap[name] = sectionStructs
+	sections = append(sections, name)
 }
 
 /*SetupRoutes :
 function creates all the necessary routes for the admin site
 */
-func SetupRoutes(app *fiber.App) {
-
+func setupRoutes(app *fiber.App) {
 	app.Get("/admin/", func(c *fiber.Ctx) {
 		c.Render("admin/home", fiber.Map{
-			"Sections": sectionMap,
+			// "Sections": sectionMap,
+			"AppNames": sections,
+			"ModelMap": ModelMap,
+			"TEST":     "TEST",
 		}, "layouts/admin")
 	})
+}
+
+func StartAdmin(port int) {
+	engine := django.New("./views", ".dj")
+	app := fiber.New(&fiber.Settings{
+		Views: engine,
+	})
+	app.Static("/static/", "./static")
+
+	setupRoutes(app)
+
+	app.Listen(port)
 }
