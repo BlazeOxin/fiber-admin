@@ -10,6 +10,9 @@ a{
     color: inherit;
     text-decoration: none;
 }
+ul{
+    list-style: none;
+}   
 :root{
     --menu-left-start: 10px;
     --btn-logo-gap: 60px;
@@ -37,7 +40,7 @@ header button.close{
     left: var(--menu-left-start);
 }
 header button.open{
-    color: #fff;
+    color: #ddd;
     left: calc(var(--menu-left-start) + var(--menu-width));
 }
 .admin-title{
@@ -77,9 +80,57 @@ aside.open{
     left: 0px;
     box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.5);
 }
+main{
+    transition: padding 240ms linear;
+    padding: 0px 2px;
+}
+@media (min-width:640px){
+    aside.open+main{
+        padding-left: var(--menu-width);
+        box-sizing: border-box;
+    }
+}
+@media (min-width:500px){
+    main{
+        padding: 0px 10px;
+    }
+}
+@media (min-width:768px){
+    main{
+        padding: 0px 20px;
+    }
+    aside.open+main{
+        padding-left: var(--menu-width) + 20px;
+    }
+}
+@media (min-width:1280px){
+    main{
+        padding: 0px 40px;
+    }
+    aside.open+main{
+        padding-left: var(--menu-width) + 40px;
+    }
+}
 footer{
     height: 20px;
     width: 100%;
     margin-top: auto;
     background: #333;
+}
+
+
+.breadcrums{
+    background: #333;
+    margin: 10px 0px;
+    font-size: 16px;
+    color: #aaa;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+.breadcrums a{
+    transition: color 120ms ease-in-out;
+}
+.breadcrums a:hover, .breadcrums a:active{
+    color: #ddd;
 }
