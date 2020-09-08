@@ -23,11 +23,11 @@ func getStructName(structure interface{}) string {
 	return valueOf.Type().Name()
 }
 
-/*RegisterSection :
+/*AddSection :
 register your Database Structs into different sections
 effictively mimic Django Admin App based Object Grouping
 */
-func RegisterSection(name string, inputStructs ...interface{}) {
+func AddSection(name string, inputStructs ...interface{}) {
 	var sectionStructs []model
 	for _, iterStruct := range inputStructs {
 		sectionStructs = append(sectionStructs, model{
