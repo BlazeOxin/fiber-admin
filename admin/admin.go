@@ -55,6 +55,6 @@ func SetupRoutes(app *fiber.App) {
 			"AppNames": sections,
 			"ModelMap": ModelMap,
 			"TEST":     "TEST",
-		}, "layouts/admin")
+		}, "layout/admin")
 	})
 }
