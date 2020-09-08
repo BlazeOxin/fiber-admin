@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{Site}} Admin</title>
+    <link rel="stylesheet" href="{{Static}}style/admin.css">
+</head>
+<body>  
+    {% include "views/layout/admin/header.dj" %}
+    <main>
+    {{embed}}
+    </main>
+    {% include "views/layout/admin/footer.dj" %}
+</body>
+</html>
