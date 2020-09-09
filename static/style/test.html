@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <script src="https://use.fontawesome.com/1d5a138666.js"></script>
     <script src="../script/admin.js" defer></script>
 </head>
+
 <body>
     <header>
         <button class="close" id="open-menu">
@@ -22,7 +24,7 @@
         </ul>
     </header>
     <aside class="close">
-    ASIDE
+        ASIDE
     </aside>
     <main>
         <div class="breadcrums">
@@ -34,20 +36,30 @@
             <i class="fa fa-chevron-right"></i>
             <a href="/">MODEL</a>
         </div>
-        <div class="section">
-            <h1>Manage Content</h1>
-            <ul class="admin-manage-content">
-                <h2>Section Name</h2>
-                <li>
-                    <a class="name" href="/model/">Model Name</a>
-                    <a href="/model/create" class="create">
-                        <i class="fa fa-plus"></i>
-                        <span>Create</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
+        <section>
+            <div class="section">
+                <h1>Manage Content</h1>
+                <ul class="managable-content-list">
+                    <h2>Section Name</h2>
+                    <li class="managable-content">
+                        <a class="managable-content-name" href="/model/">Model Name</a>
+                        <a href="/model/create" class="managable-content-create">
+                            <i class="fa fa-plus"></i>
+                            <span>Create</span>
+                        </a>
+                    </li>
+                    <li class="managable-content">
+                        <a class="managable-content-name" href="/model/">Model Name</a>
+                        <a href="/model/create" class="managable-content-create">
+                            <i class="fa fa-plus"></i>
+                            <span>Create</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
     </main>
     <footer></footer>
 </body>
+
 </html>

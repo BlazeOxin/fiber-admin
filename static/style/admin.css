@@ -12,6 +12,8 @@ a{
 }
 ul{
     list-style: none;
+    margin: 1em 0px;
+    padding: 0px;
 }   
 :root{
     --menu-left-start: 10px;
@@ -52,9 +54,6 @@ header button.open{
     padding: 0px 20px;
     transition: left 240ms linear;
 }
-button.open+.admin-title{
-    left: calc(var(--menu-left-start) + var(--menu-width) + var(--btn-logo-gap));
-}
 
 .admin-nav{
     display: flex;
@@ -89,6 +88,10 @@ main{
         padding-left: var(--menu-width);
         box-sizing: border-box;
     }
+    button.open+.admin-title{
+        left: calc(var(--menu-left-start) + var(--menu-width) + var(--btn-logo-gap));
+    }
+    
 }
 @media (min-width:500px){
     main{
@@ -108,7 +111,7 @@ main{
         padding: 0px 40px;
     }
     aside.open+main{
-        padding-left: var(--menu-width) + 40px;
+        padding-left: calc(var(--menu-width) + 40px);
     }
 }
 footer{
@@ -133,4 +136,27 @@ footer{
 }
 .breadcrums a:hover, .breadcrums a:active{
     color: #ddd;
+}
+
+li.managable-content{
+    display: flex;
+    box-sizing: border-box;
+    padding: 10px 4vw;
+    border: 1px solid #333;
+    border-radius: 4px;
+    margin: 5px 0px;
+}
+
+a.managable-content-create{
+    margin-left: auto;    
+}
+a.managable-content-name:hover,
+a.managable-content-name:active{
+    font-weight: 500;
+}
+@media (min-width: 500px){
+    .managable-content-list{
+        padding: 0px 20px;
+        box-sizing: border-box;
+    }
 }

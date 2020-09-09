@@ -1,26 +1,21 @@
 package admin
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/gofiber/fiber"
+	"github.com/gosimple/slug"
 )
 
 /*Model :
 
  */
-
 type Model struct {
 	name   string
 	object interface{}
 }
 
-var sections []string
-
-var ModelMap = make(map[string][]Model)
-
-// var sectionMap = make(map[string][]Model)
+var contentManager = make(map[string][]Model)
 
 func getStructName(structure interface{}) string {
 	valueOf := reflect.ValueOf(structure)
@@ -43,21 +38,18 @@ func AddSection(name string, inputStructs ...interface{}) {
 			object: iterStruct,
 		})
 	}
-	sections = append(sections, name)
-	ModelMap[name] = sectionStructs
+	contentManager[name] = sectionStructs
 }
 
 /*SetupRoutes :
 function creates all the necessary routes for the admin site
 */
 func SetupRoutes(app *fiber.App) {
-	fmt.Print(sections, ModelMap)
-	app.Get("/admin/", func(c *fiber.Ctx) {
+	app.Get("/admin", func(c *fiber.Ctx) {
 		c.Render("admin/home", fiber.Map{
-			// "Sections": sectionMap,
-			"AppNames": sections,
-			"ModelMap": ModelMap,
-			"TEST":     "TEST",
+			"ContentManager":        contentManager,
+			"Slugify":               slug.Make,
+			"ShowContentManagement": len(contentManager) > 0,
 		}, "layout/admin")
 	})
 }
