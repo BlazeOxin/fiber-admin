@@ -133,11 +133,16 @@ footer{
 }
 .breadcrums a{
     transition: color 120ms ease-in-out;
+    text-transform: uppercase;
 }
 .breadcrums a:hover, .breadcrums a:active{
     color: #ddd;
 }
 
+.managable-content-list h2 a:hover,
+.managable-content-list h2 a:active{
+    color: #555;
+}
 li.managable-content{
     display: flex;
     box-sizing: border-box;

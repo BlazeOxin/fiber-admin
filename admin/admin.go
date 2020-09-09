@@ -1,21 +1,27 @@
 package admin
 
 import (
+	"fmt"
 	"reflect"
 
+	"github.com/fatih/structs"
 	"github.com/gofiber/fiber"
 	"github.com/gosimple/slug"
+	"gorm.io/gorm"
 )
 
 /*Model :
 
  */
 type Model struct {
-	name   string
-	object interface{}
+	Name   string
+	Object interface{}
 }
 
-var contentManager = make(map[string][]Model)
+/*ContentManager :
+
+ */
+var ContentManager = make(map[string][]Model)
 
 func getStructName(structure interface{}) string {
 	valueOf := reflect.ValueOf(structure)
@@ -26,6 +32,14 @@ func getStructName(structure interface{}) string {
 	return valueOf.Type().Name()
 }
 
+func getStructNameList(structList []interface{}) []string {
+	var output []string
+	for _, v := range structList {
+		output = append(output, getStructName(v))
+	}
+	return output
+}
+
 /*AddSection :
 register your Database Structs into different sections
 effictively mimic Django Admin App based Object Grouping
@@ -33,23 +47,51 @@ effictively mimic Django Admin App based Object Grouping
 func AddSection(name string, inputStructs ...interface{}) {
 	var sectionStructs []Model
 	for _, iterStruct := range inputStructs {
+
 		sectionStructs = append(sectionStructs, Model{
-			name:   getStructName(iterStruct),
-			object: iterStruct,
+			Name:   getStructName(iterStruct),
+			Object: iterStruct,
 		})
 	}
-	contentManager[name] = sectionStructs
+	ContentManager[name] = sectionStructs
 }
 
 /*SetupRoutes :
 function creates all the necessary routes for the admin site
 */
-func SetupRoutes(app *fiber.App) {
+func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	app.Get("/admin", func(c *fiber.Ctx) {
 		c.Render("admin/home", fiber.Map{
-			"ContentManager":        contentManager,
+			"ContentManager":        ContentManager,
 			"Slugify":               slug.Make,
-			"ShowContentManagement": len(contentManager) > 0,
+			"ShowContentManagement": len(ContentManager) > 0,
 		}, "layout/admin")
 	})
+
+	for sectionName, contentList := range ContentManager {
+		app.Get(fmt.Sprintf("/admin/manage/%s", slug.Make(sectionName)), func(c *fiber.Ctx) {
+			c.Render("admin/section-only-content", fiber.Map{
+				"Type":        "Manage Content",
+				"SectionName": sectionName,
+				"StructList":  contentList,
+				"Slugify":     slug.Make,
+			}, "layout/admin")
+		})
+
+		for _, contentStruct := range contentList {
+			var queriedData []interface{}
+			db.Model(contentStruct.Object).Find(&queriedData)
+			fmt.Print(queriedData)
+			app.Get(fmt.Sprintf("/admin/manage/%s/%s", slug.Make(sectionName), slug.Make(contentStruct.Name)), func(c *fiber.Ctx) {
+				c.Render("admin/content-manager", fiber.Map{
+					"Type":        "Manage Content",
+					"SectionName": sectionName,
+					"Fields":      structs.Names(contentStruct.Object),
+					"Items":       getStructNameList(queriedData),
+					"Slugify":     slug.Make,
+				}, "layout/admin")
+			})
+
+		}
+	}
 }
