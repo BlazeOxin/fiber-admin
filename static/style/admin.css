@@ -82,6 +82,7 @@ aside.open{
 main{
     transition: padding 240ms linear;
     padding: 0px 2px;
+    flex: auto;
 }
 @media (min-width:640px){
     aside.open+main{
@@ -117,7 +118,7 @@ main{
 footer{
     height: 20px;
     width: 100%;
-    margin-top: auto;
+    /* margin-top: auto; */
     background: #333;
 }
 
@@ -164,4 +165,11 @@ a.managable-content-name:active{
         padding: 0px 20px;
         box-sizing: border-box;
     }
+}
+th{
+    background: #333;
+}
+
+table.content-list thead tr th:last-child{
+    width: 100%;
 }

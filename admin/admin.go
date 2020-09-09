@@ -69,9 +69,8 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	})
 
 	for sectionName, contentList := range ContentManager {
-		app.Get(fmt.Sprintf("/admin/manage/%s", slug.Make(sectionName)), func(c *fiber.Ctx) {
-			c.Render("admin/section-only-content", fiber.Map{
-				"Type":        "Manage Content",
+		app.Get(fmt.Sprintf("/admin/%s", slug.Make(sectionName)), func(c *fiber.Ctx) {
+			c.Render("admin/template/section", fiber.Map{
 				"SectionName": sectionName,
 				"StructList":  contentList,
 				"Slugify":     slug.Make,
@@ -82,13 +81,17 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 			var queriedData []interface{}
 			db.Model(contentStruct.Object).Find(&queriedData)
 			fmt.Print(queriedData)
-			app.Get(fmt.Sprintf("/admin/manage/%s/%s", slug.Make(sectionName), slug.Make(contentStruct.Name)), func(c *fiber.Ctx) {
-				c.Render("admin/content-manager", fiber.Map{
-					"Type":        "Manage Content",
+
+			app.Get(fmt.Sprintf("/admin/%s/%s", slug.Make(sectionName), slug.Make(contentStruct.Name)), func(c *fiber.Ctx) {
+				c.Render("admin/template/content", fiber.Map{
+					"ContentName": contentStruct.Name,
 					"SectionName": sectionName,
 					"Fields":      structs.Names(contentStruct.Object),
 					"Items":       getStructNameList(queriedData),
-					"Slugify":     slug.Make,
+					"getValue": func(fieldName string, index int) interface{} {
+						return reflect.ValueOf(queriedData[index]).FieldByName(fieldName)
+					},
+					"Slugify": slug.Make,
 				}, "layout/admin")
 			})
 
