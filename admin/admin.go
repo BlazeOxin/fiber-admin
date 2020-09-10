@@ -13,7 +13,6 @@ import (
 )
 
 /*Model :
-
  */
 type Model struct {
 	ObjectPtr interface{}
@@ -21,22 +20,11 @@ type Model struct {
 }
 
 /*Field :
-
  */
 type Field struct {
 	Type            string
 	Choices         []string
 	ForeignKeyModel string
-}
-
-/*FieldWithValue :
-
- */
-type FieldWithValue struct {
-	Type    string
-	Select  bool
-	Choices []string
-	Value   interface{}
 }
 
 var lModels = make(map[string]Model)
@@ -66,83 +54,6 @@ func getStructNameList(structList []interface{}) []string {
 	}
 	return output
 }
-
-// func createStructFieldMap(inputStruct interface{}) map[string]interface{} {
-// 	var output map[string]interface{}
-
-// 	for _, fieldName := range structs.Names(inputStruct) {
-// 		valueOf := reflect.ValueOf(inputStruct)
-// 		field := valueOf.FieldByName(fieldName)
-
-// 		fieldSelect := false
-// 		fieldType := "text"
-
-// 		switch field.Kind() {
-// 		case reflect.Int, reflect.Int8, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint32, reflect.Uint64:
-// 			fieldType = "number"
-// 			break
-// 		case reflect.String:
-// 			fieldType = "text"
-// 			break
-// 		case reflect.Bool:
-// 			fieldType = "checkbox"
-// 			break
-// 		case reflect.Struct:
-// 			fieldType = "foreignkey"
-// 			fieldSelect = true
-// 			break
-// 		}
-// 		output[fieldName] = Field{
-// 			Select: fieldSelect,
-// 			Type:   fieldType,
-// 		}
-// 	}
-
-// 	return output
-// }
-
-// func createStructFieldWithValueMap(inputStruct interface{}) map[string]interface{} {
-// 	var output map[string]interface{}
-
-// 	for _, fieldName := range structs.Names(inputStruct) {
-// 		valueOf := reflect.Indirect(reflect.ValueOf(inputStruct))
-// 		field := valueOf.FieldByName(fieldName)
-
-// 		fieldSelect := false
-// 		fieldType := "text"
-// 		var fieldValue interface{}
-
-// 		switch field.Kind() {
-// 		case reflect.Int, reflect.Int8, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint32, reflect.Uint64:
-// 			fieldType = "number"
-// 			fieldValue = field
-// 			break
-// 		case reflect.String:
-// 			fieldType = "text"
-// 			fieldValue = field
-// 			break
-// 		case reflect.Bool:
-// 			fieldType = "checkbox"
-// 			fieldValue = field
-// 			break
-// 		case reflect.Struct:
-// 			fieldValue = createStructFieldWithValueMap(field)
-// 			fieldSelect = true
-// 			fieldType = "foreignkey"
-// 			break
-// 		default:
-// 			fieldValue = field
-// 			break
-// 		}
-// 		output[fieldName] = FieldWithValue{
-// 			Select: fieldSelect,
-// 			Value:  fieldValue,
-// 			Type:   fieldType,
-// 		}
-// 	}
-
-// 	return output
-// }
 
 func processFields(Model interface{}) map[string]Field {
 	Output := make(map[string]Field)
