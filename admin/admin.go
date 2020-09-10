@@ -130,8 +130,6 @@ func AddSection(name string, inputStructs ...interface{}) {
 		ModelList = append(ModelList, modelName)
 	}
 	lApps[name] = ModelList
-	fmt.Println(lApps)
-	fmt.Println(lModels)
 }
 
 /*SetupRoutes :
@@ -140,24 +138,24 @@ function creates all the necessary routes for the admin site
 func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	app.Get("/admin", func(c *fiber.Ctx) {
 		c.Render("admin/home", fiber.Map{
-			"Title":                 "Admin Site",
-			"Apps":                  lApps,
-			"Slugify":               slug.Make,
-			"ShowContentManagement": len(lApps) > 0,
+			"Title":   "Admin Site",
+			"Apps":    lApps,
+			"Slugify": slug.Make,
+			"ShowCMS": len(lApps) > 0,
 		}, "layout/admin")
 	})
 
-	for AppName, ContentList := range lApps {
+	for AppName, ModelList := range lApps {
 		app.Get(fmt.Sprintf("/admin/%s", slug.Make(AppName)), func(c *fiber.Ctx) {
-			c.Render("admin/template/section", fiber.Map{
+			c.Render("admin/app", fiber.Map{
 				"Title":      AppName,
 				"AppName":    AppName,
-				"StructList": ContentList,
+				"StructList": ModelList,
 				"Slugify":    slug.Make,
 			}, "layout/admin")
 		})
 
-		for _, ModelName := range ContentList {
+		for _, ModelName := range ModelList {
 			Model := lModels[ModelName]
 
 			var queriedData []interface{}
@@ -166,7 +164,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 			fmt.Print(queriedData)
 
 			app.Get(fmt.Sprintf("/admin/%s/%s", slug.Make(AppName), slug.Make(ModelName)), func(c *fiber.Ctx) {
-				c.Render("admin/template/content", fiber.Map{
+				c.Render("admin/cms/model", fiber.Map{
 					"Title":     ModelName,
 					"AppName":   AppName,
 					"ModelName": ModelName,
@@ -189,10 +187,10 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 				if err == nil {
 					context["ID"] = id
 				}
-				c.Render("admin/template/edit", context, "layout/admin")
+				c.Render("admin/cms/edit", context, "layout/admin")
 			})
 			app.Get(fmt.Sprintf("/admin/%s/%s/create", slug.Make(AppName), slug.Make(ModelName)), func(c *fiber.Ctx) {
-				c.Render("admin/template/create", fiber.Map{
+				c.Render("admin/cms/create", fiber.Map{
 					"Title":     fmt.Sprintf("Create %s", ModelName),
 					"AppName":   AppName,
 					"ModelName": ModelName,
