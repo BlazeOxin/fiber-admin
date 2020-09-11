@@ -180,11 +180,11 @@ footer div{
     color: #ddd;
 }
 
-.managable-content-list h2 a:hover,
-.managable-content-list h2 a:active{
+.managable-model-list h2 a:hover,
+.managable-model-list h2 a:active{
     color: #555;
 }
-li.managable-content{
+li.managable-model{
     display: flex;
     box-sizing: border-box;
     padding: 10px 4vw;
@@ -193,25 +193,25 @@ li.managable-content{
     margin: 5px 0px;
 }
 
-a.managable-content-create{
+a.managable-model-create{
     margin-left: auto;    
 }
-a.managable-content-name:hover,
-a.managable-content-name:active{
+a.managable-model-name:hover,
+a.managable-model-name:active{
     font-weight: 500;
 }
 @media (min-width: 500px){
-    .managable-content-list{
+    .managable-model-list{
         padding: 0px 20px;
         box-sizing: border-box;
     }
 }
-.content-group{
+.model-group{
     flex:auto;
     display: flex;
     flex-direction: column;
 }
-.content-maintable{
+.model-maintable{
     flex: auto;
     display: flex;
     flex-direction: column;
@@ -220,44 +220,44 @@ a.managable-content-name:active{
     border-style: solid;
     border-color: #333;
 }
-.content-list thead th{
+.model-list thead th{
     background: #333;
     color: #aaa;
     font-weight: 500;
 }
-.content-list thead th:last-child{
+.model-list thead th:last-child{
     width: 100%;
 }
-.content-list td,
-.content-list th{
+.model-list td,
+.model-list th{
     width: fit-content;
     font-size: 16px;
     padding: 6px 10px;
 }
 
-.content-list{
+.model-list{
     height: 100%;
     width: 100%;
     flex: auto;
 }
-.content-list a:hover,
-.content-list a:active{
+.model-list a:hover,
+.model-list a:active{
     font-weight: 500;
 }
-.content-list tbody tr td{
+.model-list tbody tr td{
     border-bottom: 1px solid #333;
 }
-.content-list thead tr th:last-child{
-}   
+/* .model-list thead tr th:last-child{
+}    */
 
-.content-form{
+.model-form{
     flex: auto;
 }
-.content-form h2,
-.content-form h3{
+.model-form h2,
+.model-form h3{
     margin: 0px;
 }
-.content-form .group{
+.model-form .group{
     padding: 0px 3px;
     margin-bottom: 30px;
     box-sizing: border-box;
@@ -330,7 +330,7 @@ textarea.form-field:active,
 textarea.form-field:focus{
     background: unset;
 }
-.content-form button[type=submit]{
+.model-form button[type=submit]{
     width: 100%;
     background: #333;
     color: #aaa;
@@ -407,4 +407,17 @@ textarea.form-field:focus{
 }
 .field-wrapper-with-manytomany .selected{
     margin: 5px 0px;
+}
+.error-message{
+    font-weight: 700;
+    font-size: 28px;
+    width: fit-content;
+    height: fit-content;
+}
+.error-wrapper{
+    flex: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }

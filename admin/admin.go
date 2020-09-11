@@ -15,8 +15,10 @@ import (
 /*Model :
  */
 type Model struct {
-	ObjectPtr interface{}
-	Fields    map[string]Field
+	ObjectPtr       interface{}
+	Fields          map[string]Field
+	ListDisplay     []string
+	PrimaryKeyField string
 }
 
 /*Field :
@@ -55,10 +57,10 @@ func getStructNameList(structList []interface{}) []string {
 	return output
 }
 
-func processFields(Model interface{}) map[string]Field {
+func processFields(Model interface{}) (map[string]Field, string) {
 	Output := make(map[string]Field)
 	ModelValue := reflect.Indirect(reflect.ValueOf(Model))
-
+	var primaryKeyField string
 	for _, fieldName := range structs.Names(Model) {
 		fieldByValue := ModelValue.FieldByName(fieldName)
 		fieldByType, _ := ModelValue.Type().FieldByName(fieldName)
@@ -73,6 +75,7 @@ func processFields(Model interface{}) map[string]Field {
 			switch gormTag.Name {
 			case "primaryKey":
 				fieldType = "primarykey"
+				primaryKeyField = fieldName
 			case "ForeignKey":
 				fieldType = "foreginkey"
 			}
@@ -112,7 +115,7 @@ func processFields(Model interface{}) map[string]Field {
 		}
 	}
 
-	return Output
+	return Output, primaryKeyField
 }
 
 /*AddSection :
@@ -123,9 +126,13 @@ func AddSection(name string, inputStructs ...interface{}) {
 	ModelList := []string{}
 	for _, iterStruct := range inputStructs {
 		modelName := getStructName(iterStruct)
+
+		Fields, PrimaryKeyField := processFields(iterStruct)
+
 		lModels[modelName] = Model{
-			ObjectPtr: iterStruct,
-			Fields:    processFields(iterStruct),
+			ObjectPtr:       iterStruct,
+			Fields:          Fields,
+			PrimaryKeyField: PrimaryKeyField,
 		}
 		ModelList = append(ModelList, modelName)
 	}
@@ -148,28 +155,32 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	for AppName, ModelList := range lApps {
 		app.Get(fmt.Sprintf("/admin/%s", slug.Make(AppName)), func(c *fiber.Ctx) {
 			c.Render("admin/app", fiber.Map{
-				"Title":      AppName,
-				"AppName":    AppName,
-				"StructList": ModelList,
-				"Slugify":    slug.Make,
+				"Title":     AppName,
+				"AppName":   AppName,
+				"ModelList": ModelList,
+				"Slugify":   slug.Make,
 			}, "layout/admin")
 		})
 
 		for _, ModelName := range ModelList {
 			Model := lModels[ModelName]
 
-			var queriedData []interface{}
 			DBModel := db.Model(Model.ObjectPtr)
-			DBModel.Find(&queriedData)
-			fmt.Print(queriedData)
 
 			app.Get(fmt.Sprintf("/admin/%s/%s", slug.Make(AppName), slug.Make(ModelName)), func(c *fiber.Ctx) {
+				var queriedData []map[string]interface{}
+				DBModel.Find(&queriedData)
+
 				c.Render("admin/cms/model", fiber.Map{
 					"Title":     ModelName,
 					"AppName":   AppName,
 					"ModelName": ModelName,
 					"Fields":    lModels[ModelName],
-					"Slugify":   slug.Make,
+					"Data":      queriedData,
+					"getPrimaryKey": func(index int) interface{} {
+						return queriedData[index][strings.ToLower(Model.PrimaryKeyField)]
+					},
+					"Slugify": slug.Make,
 				}, "layout/admin")
 			})
 
@@ -189,6 +200,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 				}
 				c.Render("admin/cms/edit", context, "layout/admin")
 			})
+
 			app.Get(fmt.Sprintf("/admin/%s/%s/create", slug.Make(AppName), slug.Make(ModelName)), func(c *fiber.Ctx) {
 				c.Render("admin/cms/create", fiber.Map{
 					"Title":     fmt.Sprintf("Create %s", ModelName),
