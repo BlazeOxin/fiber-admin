@@ -2,7 +2,9 @@ package admin
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/structs"
@@ -12,20 +14,30 @@ import (
 	"gorm.io/gorm"
 )
 
+/*MConfig :
+
+ */
+type MConfig struct {
+	ListDisplay []string
+}
+
 /*Model :
+
  */
 type Model struct {
 	ObjectPtr       interface{}
 	Fields          map[string]Field
-	ListDisplay     []string
 	PrimaryKeyField string
+	Config          MConfig
 }
 
 /*Field :
+
  */
 type Field struct {
 	Type            string
 	Choices         []string
+	HelpText        string
 	ForeignKeyModel string
 }
 
@@ -118,6 +130,44 @@ func processFields(Model interface{}) (map[string]Field, string) {
 	return Output, primaryKeyField
 }
 
+func parseFieldType(input string, field Field) interface{} {
+	var Output interface{}
+
+	switch field.Type {
+
+	case "number", "foreginkey", "primarykey":
+		Output, _ = strconv.ParseInt(input, 10, 0)
+	case "checkbox":
+		Output, _ = strconv.ParseBool(input)
+	case "manytomany":
+		manyToMany := []int64{}
+		for _, value := range strings.Split(input, ",") {
+			converted, _ := strconv.ParseInt(value, 10, 0)
+			manyToMany = append(manyToMany, converted)
+		}
+		Output = manyToMany
+	}
+
+	return Output
+}
+
+func getPOSTData(body string, fields map[string]Field) map[string]interface{} {
+	Output := make(map[string]interface{})
+
+	for _, term := range strings.Split(body, "&") {
+		SplitTerm := strings.Split(term, "=")
+		Name := SplitTerm[0]
+		SValue, _ := url.QueryUnescape(SplitTerm[1])
+		Key := strings.ToLower(Name)
+
+		// parseFieldType(
+		Output[Key] = SValue
+		// , fields[SplitTerm[0]])
+	}
+
+	return Output
+}
+
 /*AddSection :
 register your Database Structs into different sections
 effictively mimic Django Admin App based Object Grouping
@@ -139,6 +189,15 @@ func AddSection(name string, inputStructs ...interface{}) {
 	lApps[name] = ModelList
 }
 
+/*ConfigCMSModel :
+
+ */
+func ConfigCMSModel(ModelName string, Config *MConfig) {
+	newModelConfig := lModels[ModelName]
+	newModelConfig.Config = *Config
+	lModels[ModelName] = newModelConfig
+}
+
 /*SetupRoutes :
 function creates all the necessary routes for the admin site
 */
@@ -153,7 +212,8 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	})
 
 	for AppName, ModelList := range lApps {
-		app.Get(fmt.Sprintf("/admin/%s", slug.Make(AppName)), func(c *fiber.Ctx) {
+		AppSlug := slug.Make(AppName)
+		app.Get(fmt.Sprintf("/admin/%s", AppSlug), func(c *fiber.Ctx) {
 			c.Render("admin/app", fiber.Map{
 				"Title":     AppName,
 				"AppName":   AppName,
@@ -161,53 +221,117 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 				"Slugify":   slug.Make,
 			}, "layout/admin")
 		})
-
-		for _, ModelName := range ModelList {
+		for i := range ModelList {
+			ModelName := ModelList[i]
+			ModelSlug := slug.Make(ModelName)
 			Model := lModels[ModelName]
 
-			DBModel := db.Model(Model.ObjectPtr)
-
-			app.Get(fmt.Sprintf("/admin/%s/%s", slug.Make(AppName), slug.Make(ModelName)), func(c *fiber.Ctx) {
+			app.Get(fmt.Sprintf("/admin/%s/%s", AppSlug, ModelSlug), func(c *fiber.Ctx) {
 				var queriedData []map[string]interface{}
-				DBModel.Find(&queriedData)
+				db.Model(Model.ObjectPtr).Find(&queriedData)
 
-				c.Render("admin/cms/model", fiber.Map{
+				c.Render("admin/cms/model", map[string]interface{}{
 					"Title":     ModelName,
 					"AppName":   AppName,
 					"ModelName": ModelName,
-					"Fields":    lModels[ModelName],
+					"Fields":    Model,
 					"Data":      queriedData,
 					"getPrimaryKey": func(index int) interface{} {
 						return queriedData[index][strings.ToLower(Model.PrimaryKeyField)]
 					},
-					"Slugify": slug.Make,
+					"getData": func(index int, fieldName string) interface{} {
+						return queriedData[index][strings.ToLower(fieldName)]
+					},
+					"ListDisplay": Model.Config.ListDisplay,
+					"isEmpty":     len(Model.Config.ListDisplay) == 0,
+					"Slugify":     slug.Make,
+				}, "layout/admin")
+
+			})
+			app.Post(fmt.Sprintf("/admin/%s/%s", AppSlug, ModelSlug), func(c *fiber.Ctx) {
+				postData := getPOSTData(c.Body(), Model.Fields)
+
+				db.Model(Model.ObjectPtr).Create(postData)
+
+				var queriedData []map[string]interface{}
+				db.Model(Model.ObjectPtr).Find(&queriedData)
+				c.Render("admin/cms/model", map[string]interface{}{
+					"Title":     ModelName,
+					"AppName":   AppName,
+					"ModelName": ModelName,
+					"Fields":    Model,
+					"Data":      queriedData,
+					"getPrimaryKey": func(index int) interface{} {
+						return queriedData[index][strings.ToLower(Model.PrimaryKeyField)]
+					},
+					"getData": func(index int, fieldName string) interface{} {
+						return queriedData[index][strings.ToLower(fieldName)]
+					},
+					"ListDisplay": Model.Config.ListDisplay,
+					"isEmpty":     len(Model.Config.ListDisplay) == 0,
+					"Slugify":     slug.Make,
 				}, "layout/admin")
 			})
-
-			app.Get(fmt.Sprintf("/admin/%s/%s/:id", slug.Make(AppName), slug.Make(ModelName)), func(c *fiber.Ctx) {
+			app.Delete(fmt.Sprintf("/admin/%s/%s", AppSlug, ModelSlug), func(c *fiber.Ctx) {
+				postData := getPOSTData(c.Body(), Model.Fields)
+				var ToDelete []int
+				for _, v := range strings.Split(fmt.Sprintf("%s", postData["objects"]), ",") {
+					iValue, _ := strconv.ParseInt(v, 10, 32)
+					ToDelete = append(ToDelete, int(iValue))
+				}
+				fmt.Println(postData)
+				db.Delete(Model.ObjectPtr, ToDelete)
+				c.Send("")
+			})
+			app.Get(fmt.Sprintf("/admin/%s/%s/edit/:id", AppSlug, ModelSlug), func(c *fiber.Ctx) {
 				id := c.Params("id")
-				err := DBModel.First(lModels[ModelName].ObjectPtr, id).Error
-				context := fiber.Map{
+
+				queriedData := make(map[string]interface{})
+				err := db.Model(Model.ObjectPtr).First(queriedData, id).Error
+
+				context := map[string]interface{}{
 					"Title":     fmt.Sprintf("Edit %s", ModelName),
 					"AppName":   AppName,
 					"ModelName": ModelName,
-					"Slugify":   slug.Make,
-					"Fields":    lModels[ModelName],
-					"HasError":  err != nil,
+					"getData": func(fieldName string) interface{} {
+						return queriedData[strings.ToLower(fieldName)]
+					},
+					"PrimaryKey": queriedData[strings.ToLower(Model.PrimaryKeyField)],
+					"Slugify":    slug.Make,
+					"Fields":     Model.Fields,
+					"HasError":   err != nil,
 				}
+
 				if err == nil {
 					context["ID"] = id
+				} else {
+					fmt.Println(err)
 				}
+
 				c.Render("admin/cms/edit", context, "layout/admin")
 			})
 
-			app.Get(fmt.Sprintf("/admin/%s/%s/create", slug.Make(AppName), slug.Make(ModelName)), func(c *fiber.Ctx) {
+			app.Post(fmt.Sprintf("/admin/%s/%s/edit/:id", AppSlug, ModelSlug), func(c *fiber.Ctx) {
+				id := c.Params("id")
+				fNamePK := strings.ToLower(Model.PrimaryKeyField)
+				err := db.Where("? = ?", fNamePK, id).First(Model.ObjectPtr).Error
+				if err != nil {
+					fmt.Println(err)
+				}
+				// postdata := getPOSTData(c.Body(), Model.Fields)
+				fmt.Println(reflect.Indirect(reflect.ValueOf(Model.ObjectPtr)))
+				// fmt.Println(db.Model(Model.ObjectPtr).Where("? = ?", strings.ToLower(Model.PrimaryKeyField), id).Updates(postdata).Error)
+
+				c.Send("queriedData")
+			})
+
+			app.Get(fmt.Sprintf("/admin/%s/%s/create", AppSlug, ModelSlug), func(c *fiber.Ctx) {
 				c.Render("admin/cms/create", fiber.Map{
 					"Title":     fmt.Sprintf("Create %s", ModelName),
 					"AppName":   AppName,
 					"ModelName": ModelName,
 					"Slugify":   slug.Make,
-					"Fields":    lModels[ModelName],
+					"Fields":    Model.Fields,
 				}, "layout/admin")
 			})
 
