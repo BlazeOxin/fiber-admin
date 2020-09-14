@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -16,7 +17,7 @@ import (
 
 /*MConfig :
 
- */
+ */ //
 type MConfig struct {
 	ListDisplay []string
 }
@@ -225,6 +226,18 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 			ModelName := ModelList[i]
 			ModelSlug := slug.Make(ModelName)
 			Model := lModels[ModelName]
+
+			// Modular API TEST
+			app.Get(fmt.Sprintf("/api/%s", ModelName), func(c *fiber.Ctx) {
+				var GetList []map[string]interface{}
+				db.Model(Model.ObjectPtr).Find(&GetList)
+				JSONData, Error := json.Marshal(GetList)
+				if Error == nil {
+					c.Send(JSONData)
+				} else {
+					c.Send(Error)
+				}
+			})
 
 			app.Get(fmt.Sprintf("/admin/%s/%s", AppSlug, ModelSlug), func(c *fiber.Ctx) {
 				var queriedData []map[string]interface{}
